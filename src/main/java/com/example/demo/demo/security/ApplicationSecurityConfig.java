@@ -15,6 +15,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.example.demo.demo.security.ApplicationUserPermission.*;
 import static com.example.demo.demo.security.ApplicationUsersRole.*;
@@ -44,7 +47,20 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticated()
                 .and()
                 .formLogin()
-                .loginPage("/login").permitAll();
+                .loginPage("/login").permitAll()
+                .defaultSuccessUrl("/courses", true)
+                .and()
+                .rememberMe()
+                    .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+                    .key("sometimes")
+                .and()
+                .logout()
+                    .logoutUrl("/logout")
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                    .clearAuthentication(true)
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID", "remember-me")
+                    .logoutSuccessUrl("/login");
     }
 
     @Override
@@ -59,7 +75,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
         UserDetails lindaUser = User.builder()
                 .username("linda")
-                .password(passwordEncoder.encode("password123"))
+                .password(passwordEncoder.encode("password1"))
                 //.roles(ADMIN.name())
                 .authorities(ADMIN.simpleGrantedAuthorities())
                 .build();
